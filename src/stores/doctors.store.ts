@@ -19,13 +19,21 @@ export const useDoctorsStore = defineStore('doctors', () => {
   }
 
   async function ensureLoaded() {
-    if (!hasLoaded.value) await fetchAll()
+    if (hasLoaded.value) return
+    try {
+      await fetchAll()
+    } catch {
+      // La vista queda con la lista vacía y su propio EmptyState se encarga de comunicarlo.
+    }
   }
 
   async function createDoctor(payload: CreateDoctorPayload) {
-    const doctor = await doctorsService.create(payload)
-    doctors.value.push(doctor)
-    return doctor
+    await doctorsService.create(payload)
+    try {
+      await fetchAll()
+    } catch {
+      // El alta ya se realizó; si el refresco de la lista falla, se reintentará al reabrir la vista.
+    }
   }
 
   return { doctors, isLoading, hasLoaded, fetchAll, ensureLoaded, createDoctor }

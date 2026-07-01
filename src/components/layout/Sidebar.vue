@@ -23,7 +23,6 @@ const NAV_ITEMS: Record<string, NavItem[]> = {
   admin: [
     { label: 'Dashboard', to: '/dashboard/admin', icon: 'pi pi-home' },
     { label: 'Médicos', to: '/admin/doctors', icon: 'pi pi-users' },
-    { label: 'Nuevo médico', to: '/admin/doctors/create', icon: 'pi pi-user-plus' },
   ],
 }
 
@@ -33,7 +32,7 @@ const route = useRoute()
 const items = computed(() => NAV_ITEMS[authStore.role ?? ''] ?? [])
 
 function isActive(to: string): boolean {
-  return route.path === to
+  return route.path === to || route.path.startsWith(`${to}/`)
 }
 </script>
 

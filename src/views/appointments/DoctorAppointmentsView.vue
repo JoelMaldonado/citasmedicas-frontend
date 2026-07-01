@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useToast } from 'primevue/usetoast'
 import type { Appointment, AppointmentStatus } from '@/types/appointment.types'
 import type { DoctorSlot } from '@/types/slot.types'
 import { slotsService } from '@/services/slots.service'
 import { useAppointments } from '@/composables/useAppointments'
+import { getEffectiveStatus } from '@/utils/appointmentStatus'
 import StatusBadge from '@/components/appointments/StatusBadge.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
+
+const toast = useToast()
 
 const STATUS_OPTIONS: Array<{ label: string; value: AppointmentStatus | null }> = [
   { label: 'Todos los estados', value: null },
@@ -25,7 +29,9 @@ onMounted(ensureLoaded)
 const statusFilter = ref<AppointmentStatus | null>(null)
 
 const filteredAppointments = computed(() =>
-  statusFilter.value ? appointments.value.filter((apt) => apt.status === statusFilter.value) : appointments.value,
+  statusFilter.value
+    ? appointments.value.filter((apt) => getEffectiveStatus(apt) === statusFilter.value)
+    : appointments.value,
 )
 
 type ActionType = 'confirm' | 'reject' | 'cancel'
@@ -74,6 +80,12 @@ async function handleActionConfirm() {
     if (type === 'reject') await rejectAppointment(appointment.id)
     if (type === 'cancel') await cancelAppointment(appointment.id)
     actionDialog.value = null
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: error instanceof Error ? error.message : 'No se pudo procesar la cita.',
+      life: 4000,
+    })
   } finally {
     isProcessingAction.value = false
   }
@@ -88,9 +100,18 @@ const isRescheduling = ref(false)
 async function openReschedule(appointment: Appointment) {
   appointmentToReschedule.value = appointment
   selectedNewSlotId.value = null
+  rescheduleOptions.value = []
   showRescheduleDialog.value = true
-  const slots = await slotsService.getByDoctor(appointment.doctorId)
-  rescheduleOptions.value = slots.filter((slot) => slot.status === 'available')
+  try {
+    const slots = await slotsService.getByDoctor(appointment.doctorId)
+    rescheduleOptions.value = slots.filter((slot) => slot.status === 'available')
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: error instanceof Error ? error.message : 'No se pudieron cargar los horarios disponibles.',
+      life: 4000,
+    })
+  }
 }
 
 async function handleReschedule() {
@@ -100,12 +121,14 @@ async function handleReschedule() {
 
   isRescheduling.value = true
   try {
-    await rescheduleAppointment(appointmentToReschedule.value.id, {
-      date: slot.date,
-      startTime: slot.startTime,
-      endTime: slot.endTime,
-    })
+    await rescheduleAppointment(appointmentToReschedule.value.id, slot)
     showRescheduleDialog.value = false
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: error instanceof Error ? error.message : 'No se pudo reagendar la cita.',
+      life: 4000,
+    })
   } finally {
     isRescheduling.value = false
   }
@@ -137,16 +160,16 @@ async function handleReschedule() {
       </Column>
       <Column field="reason" header="Motivo" />
       <Column header="Estado">
-        <template #body="{ data }"><StatusBadge :status="data.status" /></template>
+        <template #body="{ data }"><StatusBadge :status="getEffectiveStatus(data)" /></template>
       </Column>
       <Column header="Acciones">
         <template #body="{ data }">
           <div class="row-actions">
-            <template v-if="data.status === 'pending'">
+            <template v-if="getEffectiveStatus(data) === 'pending'">
               <Button label="Confirmar" size="small" severity="success" @click="openAction('confirm', data)" />
               <Button label="Rechazar" size="small" severity="danger" text @click="openAction('reject', data)" />
             </template>
-            <template v-else-if="data.status === 'confirmed'">
+            <template v-else-if="getEffectiveStatus(data) === 'confirmed'">
               <Button label="Reagendar" size="small" severity="info" text @click="openReschedule(data)" />
               <Button label="Cancelar" size="small" severity="danger" text @click="openAction('cancel', data)" />
             </template>

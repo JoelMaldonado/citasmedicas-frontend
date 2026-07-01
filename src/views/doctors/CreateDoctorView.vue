@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { useDoctorsStore } from '@/stores/doctors.store'
 
 const SPECIALTIES = ['Cardiología', 'Pediatría', 'Dermatología', 'Medicina General', 'Ginecología', 'Traumatología']
 
 const doctorsStore = useDoctorsStore()
+const router = useRouter()
 const toast = useToast()
 
 const form = reactive({
@@ -25,6 +27,7 @@ const errors = reactive({
 })
 
 const isSubmitting = ref(false)
+const submitError = ref('')
 
 function validate(): boolean {
   errors.fullName = form.fullName ? '' : 'El nombre completo es obligatorio.'
@@ -39,15 +42,14 @@ function validate(): boolean {
 async function handleSubmit() {
   if (!validate()) return
 
+  submitError.value = ''
   isSubmitting.value = true
   try {
     await doctorsStore.createDoctor({ ...form })
     toast.add({ severity: 'success', summary: 'Médico registrado', detail: `${form.fullName} fue dado de alta correctamente.`, life: 4000 })
-    form.fullName = ''
-    form.email = ''
-    form.password = ''
-    form.specialty = ''
-    form.licenseNumber = ''
+    router.push('/admin/doctors')
+  } catch (error) {
+    submitError.value = error instanceof Error ? error.message : 'No se pudo registrar el médico. Intenta nuevamente.'
   } finally {
     isSubmitting.value = false
   }
@@ -57,6 +59,7 @@ async function handleSubmit() {
 <template>
   <div class="page">
     <div class="page-header">
+      <Button icon="pi pi-arrow-left" text label="Volver a médicos" @click="router.push('/admin/doctors')" />
       <h1>Nuevo médico</h1>
       <p>Registra un nuevo médico en el sistema.</p>
     </div>
@@ -93,6 +96,8 @@ async function handleSubmit() {
             <InputText id="licenseNumber" v-model="form.licenseNumber" placeholder="CMP-00000" :invalid="!!errors.licenseNumber" />
             <small v-if="errors.licenseNumber" class="field__error">{{ errors.licenseNumber }}</small>
           </div>
+
+          <Message v-if="submitError" severity="error" :closable="false">{{ submitError }}</Message>
 
           <Button type="submit" label="Registrar médico" icon="pi pi-user-plus" :loading="isSubmitting" class="doctor-form__submit" />
         </form>

@@ -1,16 +1,23 @@
 import type { DoctorSlot } from '@/types/slot.types'
-import { mockSlots } from '@/mocks/slots.mock'
-import { mockDelay } from '@/services/mockDelay'
-
-const SLOTS_PER_DAY = 6
+import { api } from '@/services/api'
+import { extractErrorMessage } from '@/services/httpError'
 
 export const slotsService = {
-  getByDoctor(doctorId: string): Promise<DoctorSlot[]> {
-    return mockDelay(mockSlots.filter((slot) => slot.doctorId === doctorId))
+  async getByDoctor(doctorId: string): Promise<DoctorSlot[]> {
+    try {
+      const { data } = await api.get<DoctorSlot[]>(`/doctors/${doctorId}/available-slots`)
+      return data
+    } catch (error) {
+      throw new Error(extractErrorMessage(error, 'No se pudieron cargar los horarios disponibles.'))
+    }
   },
 
-  // El mock no persiste los horarios generados, solo simula el resultado del backend.
-  generate(_doctorId: string, _startDate: string, days: number): Promise<{ createdCount: number }> {
-    return mockDelay({ createdCount: days * SLOTS_PER_DAY }, 800)
+  async generate(doctorId: string, startDate: string, days: number): Promise<{ createdCount: number }> {
+    try {
+      const { data } = await api.post<unknown[]>(`/doctors/${doctorId}/generate-slots`, { startDate, days })
+      return { createdCount: data.length }
+    } catch (error) {
+      throw new Error(extractErrorMessage(error, 'No se pudieron generar los horarios.'))
+    }
   },
 }

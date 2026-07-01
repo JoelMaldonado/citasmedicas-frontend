@@ -1,6 +1,6 @@
 import type { Doctor } from '@/types/doctor.types'
-import { mockDoctors } from '@/mocks/doctors.mock'
-import { mockDelay } from '@/services/mockDelay'
+import { api } from '@/services/api'
+import { extractErrorMessage } from '@/services/httpError'
 
 export interface CreateDoctorPayload {
   fullName: string
@@ -10,23 +10,63 @@ export interface CreateDoctorPayload {
   licenseNumber: string
 }
 
+interface ApiDoctor {
+  id: string
+  specialty: string
+  licenseNumber: string
+  user: {
+    id: string
+    email: string
+    fullName: string
+  }
+}
+
+function toDoctor(apiDoctor: ApiDoctor): Doctor {
+  return {
+    id: apiDoctor.id,
+    fullName: apiDoctor.user.fullName,
+    email: apiDoctor.user.email,
+    specialty: apiDoctor.specialty,
+    licenseNumber: apiDoctor.licenseNumber,
+  }
+}
+
 export const doctorsService = {
-  getAll(): Promise<Doctor[]> {
-    return mockDelay([...mockDoctors])
-  },
-
-  getById(id: string): Promise<Doctor | undefined> {
-    return mockDelay(mockDoctors.find((doctor) => doctor.id === id))
-  },
-
-  create(payload: CreateDoctorPayload): Promise<Doctor> {
-    const doctor: Doctor = {
-      id: `doc-${Date.now()}`,
-      fullName: payload.fullName,
-      email: payload.email,
-      specialty: payload.specialty,
-      licenseNumber: payload.licenseNumber,
+  async getAll(): Promise<Doctor[]> {
+    try {
+      const { data } = await api.get<ApiDoctor[]>('/doctors')
+      return data.map(toDoctor)
+    } catch (error) {
+      throw new Error(extractErrorMessage(error, 'No se pudo cargar la lista de médicos.'))
     }
-    return mockDelay(doctor)
+  },
+
+  async getById(id: string): Promise<Doctor | undefined> {
+    try {
+      const { data } = await api.get<ApiDoctor>(`/doctors/${id}`)
+      return toDoctor(data)
+    } catch (error) {
+      throw new Error(extractErrorMessage(error, 'No se pudo cargar el médico.'))
+    }
+  },
+
+  // El backend no expone un endpoint "/doctors/me": se resuelve buscando
+  // en la lista completa al médico cuyo user.id coincide con el usuario logueado.
+  async getByUserId(userId: string): Promise<Doctor | undefined> {
+    try {
+      const { data } = await api.get<ApiDoctor[]>('/doctors')
+      const match = data.find((item) => item.user.id === userId)
+      return match ? toDoctor(match) : undefined
+    } catch (error) {
+      throw new Error(extractErrorMessage(error, 'No se pudo obtener tu perfil de médico.'))
+    }
+  },
+
+  async create(payload: CreateDoctorPayload): Promise<void> {
+    try {
+      await api.post('/doctors', payload)
+    } catch (error) {
+      throw new Error(extractErrorMessage(error, 'No se pudo registrar el médico.'))
+    }
   },
 }

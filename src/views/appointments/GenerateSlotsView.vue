@@ -2,6 +2,7 @@
 import { reactive, ref } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { slotsService } from '@/services/slots.service'
+import { doctorsService } from '@/services/doctors.service'
 import { useAuthStore } from '@/stores/auth.store'
 
 const authStore = useAuthStore()
@@ -18,15 +19,27 @@ async function handleGenerate() {
   if (!authStore.user) return
   isGenerating.value = true
   try {
+    const doctor = await doctorsService.getByUserId(authStore.user.id)
+    if (!doctor) {
+      toast.add({ severity: 'error', summary: 'No se encontró tu perfil de médico', life: 4000 })
+      return
+    }
+
     const result = await slotsService.generate(
-      authStore.user.id,
+      doctor.id,
       form.startDate.toISOString().slice(0, 10),
       form.days,
     )
     toast.add({
       severity: 'success',
       summary: 'Horarios generados',
-      detail: `Se generaron ${result.createdCount} horarios para los próximos ${form.days} días.`,
+      detail: `Se generaron ${result.createdCount} horarios nuevos (los que ya existían se omitieron).`,
+      life: 4000,
+    })
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: error instanceof Error ? error.message : 'No se pudieron generar los horarios.',
       life: 4000,
     })
   } finally {

@@ -39,8 +39,8 @@ async function handleSubmit() {
 
   try {
     await login({ email: form.email, password: form.password })
-  } catch {
-    submitError.value = 'No se pudo iniciar sesión. Intenta nuevamente.'
+  } catch (error) {
+    submitError.value = error instanceof Error ? error.message : 'No se pudo iniciar sesión. Intenta nuevamente.'
   }
 }
 </script>
@@ -67,7 +67,7 @@ async function handleSubmit() {
           <Password
             id="password"
             v-model="form.password"
-            placeholder="••••••••"
+            placeholder="Ingresa tu contraseña"
             :feedback="false"
             toggle-mask
             :invalid="!!errors.password"
@@ -84,16 +84,6 @@ async function handleSubmit() {
           ¿No tienes cuenta? <router-link to="/register">Regístrate aquí</router-link>
         </p>
       </form>
-
-      <Divider />
-
-      <div class="login-hint">
-        <i class="pi pi-info-circle" />
-        <p>
-          Demo: usa un correo con <strong>"admin"</strong> o <strong>"doctor"</strong> para probar esos roles
-          (ej. admin@demo.com, doctor@demo.com). Cualquier otro correo ingresa como paciente.
-        </p>
-      </div>
     </template>
   </Card>
 </template>
@@ -145,20 +135,5 @@ async function handleSubmit() {
   font-size: 0.85rem;
   color: #64748b;
   margin: 0;
-}
-
-.login-hint {
-  display: flex;
-  gap: 0.6rem;
-  background: #f0f9ff;
-  border-radius: 8px;
-  padding: 0.75rem;
-  color: #0369a1;
-  font-size: 0.8rem;
-}
-
-.login-hint p {
-  margin: 0;
-  line-height: 1.4;
 }
 </style>

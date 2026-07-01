@@ -1,5 +1,6 @@
-import type { User, UserRole } from '@/types/user.types'
-import { mockDelay } from '@/services/mockDelay'
+import type { User } from '@/types/user.types'
+import { api } from '@/services/api'
+import { extractErrorMessage } from '@/services/httpError'
 
 export interface LoginPayload {
   email: string
@@ -17,42 +18,27 @@ export interface AuthResult {
   token: string
 }
 
-function resolveRoleFromEmail(email: string): UserRole {
-  const normalized = email.toLowerCase()
-  if (normalized.includes('admin')) return 'admin'
-  if (normalized.includes('doctor')) return 'doctor'
-  return 'patient'
-}
-
-function nameFromEmail(email: string): string {
-  const [localPart] = email.split('@')
-  return localPart
-    .replace(/[._-]+/g, ' ')
-    .split(' ')
-    .filter(Boolean)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
+interface AuthApiResponse {
+  access_token: string
+  user: User
 }
 
 export const authService = {
-  login(payload: LoginPayload): Promise<AuthResult> {
-    const role = resolveRoleFromEmail(payload.email)
-    const user: User = {
-      id: `user-${role}`,
-      email: payload.email,
-      fullName: nameFromEmail(payload.email),
-      role,
+  async login(payload: LoginPayload): Promise<AuthResult> {
+    try {
+      const { data } = await api.post<AuthApiResponse>('/auth/login', payload)
+      return { user: data.user, token: data.access_token }
+    } catch (error) {
+      throw new Error(extractErrorMessage(error, 'No se pudo iniciar sesión. Intenta nuevamente.'))
     }
-    return mockDelay({ user, token: `mock-token-${role}-${Date.now()}` })
   },
 
-  register(payload: RegisterPayload): Promise<AuthResult> {
-    const user: User = {
-      id: 'user-patient',
-      email: payload.email,
-      fullName: payload.fullName,
-      role: 'patient',
+  async register(payload: RegisterPayload): Promise<AuthResult> {
+    try {
+      const { data } = await api.post<AuthApiResponse>('/auth/register', payload)
+      return { user: data.user, token: data.access_token }
+    } catch (error) {
+      throw new Error(extractErrorMessage(error, 'No se pudo completar el registro. Intenta nuevamente.'))
     }
-    return mockDelay({ user, token: `mock-token-patient-${Date.now()}` })
   },
 }

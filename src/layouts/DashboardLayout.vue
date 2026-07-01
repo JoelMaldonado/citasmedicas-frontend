@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import Sidebar from '@/components/layout/Sidebar.vue'
 import Topbar from '@/components/layout/Topbar.vue'
+import { useRealtimeAppointments } from '@/composables/useRealtimeAppointments'
+
+useRealtimeAppointments()
 </script>
 
 <template>

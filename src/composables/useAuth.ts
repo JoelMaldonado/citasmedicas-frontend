@@ -2,6 +2,7 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.store'
 import type { LoginPayload, RegisterPayload } from '@/services/auth.service'
+import { disconnectSocket } from '@/services/realtime'
 
 export function useAuth() {
   const store = useAuthStore()
@@ -24,6 +25,7 @@ export function useAuth() {
 
   async function logout() {
     store.logout()
+    disconnectSocket()
     await router.push('/login')
   }
 

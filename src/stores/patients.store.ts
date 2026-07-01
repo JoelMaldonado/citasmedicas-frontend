@@ -19,7 +19,12 @@ export const usePatientsStore = defineStore('patients', () => {
   }
 
   async function ensureLoaded() {
-    if (!hasLoaded.value) await fetchAll()
+    if (hasLoaded.value) return
+    try {
+      await fetchAll()
+    } catch {
+      // La vista queda con la lista vacía y su propio EmptyState se encarga de comunicarlo.
+    }
   }
 
   return { patients, isLoading, hasLoaded, fetchAll, ensureLoaded }

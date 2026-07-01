@@ -1,14 +1,17 @@
 import { computed } from 'vue'
 import { useToast } from 'primevue/usetoast'
-import { useAppointmentsStore } from '@/stores/appointments.store'
-import type { CreateAppointmentPayload } from '@/services/appointments.service'
+import { useAppointmentsStore, type CreateAppointmentInput, type RescheduleSlotInput } from '@/stores/appointments.store'
+import { useAuthStore } from '@/stores/auth.store'
 
 function sortKey(date: string, time: string): string {
   return `${date}T${time}`
 }
 
+export type RequestAppointmentInput = Omit<CreateAppointmentInput, 'patientName'>
+
 export function useAppointments() {
   const store = useAppointmentsStore()
+  const authStore = useAuthStore()
   const toast = useToast()
 
   const appointments = computed(() => store.appointments)
@@ -32,29 +35,32 @@ export function useAppointments() {
     await store.ensureLoaded()
   }
 
-  async function requestAppointment(payload: CreateAppointmentPayload) {
-    const appointment = await store.createAppointment(payload)
+  async function requestAppointment(payload: RequestAppointmentInput) {
+    const appointment = await store.createAppointment({
+      ...payload,
+      patientName: authStore.user?.fullName ?? '',
+    })
     toast.add({ severity: 'success', summary: 'Cita solicitada', detail: 'Tu cita quedó pendiente de confirmación.', life: 4000 })
     return appointment
   }
 
   async function cancelAppointment(id: string) {
-    await store.updateStatus(id, 'cancelled')
+    await store.cancelAppointment(id)
     toast.add({ severity: 'info', summary: 'Cita cancelada', life: 3000 })
   }
 
   async function confirmAppointment(id: string) {
-    await store.updateStatus(id, 'confirmed')
+    await store.confirmAppointment(id)
     toast.add({ severity: 'success', summary: 'Cita confirmada', life: 3000 })
   }
 
   async function rejectAppointment(id: string) {
-    await store.updateStatus(id, 'rejected')
+    await store.rejectAppointment(id)
     toast.add({ severity: 'warn', summary: 'Cita rechazada', life: 3000 })
   }
 
-  async function rescheduleAppointment(id: string, slot: { date: string; startTime: string; endTime: string }) {
-    await store.reschedule(id, slot)
+  async function rescheduleAppointment(id: string, slot: RescheduleSlotInput) {
+    await store.rescheduleAppointment(id, slot)
     toast.add({ severity: 'success', summary: 'Cita reagendada', life: 3000 })
   }
 

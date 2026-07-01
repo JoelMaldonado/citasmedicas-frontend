@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useToast } from 'primevue/usetoast'
 import type { Doctor } from '@/types/doctor.types'
 import type { DoctorSlot } from '@/types/slot.types'
 import { doctorsService } from '@/services/doctors.service'
@@ -11,6 +12,7 @@ import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 
 const route = useRoute()
 const router = useRouter()
+const toast = useToast()
 const { requestAppointment } = useAppointments()
 
 const doctorId = route.params.doctorId as string
@@ -47,13 +49,18 @@ function formatDate(date: string): string {
 
 onMounted(async () => {
   isLoading.value = true
-  const [doctorResult, slotsResult] = await Promise.all([
-    doctorsService.getById(doctorId),
-    slotsService.getByDoctor(doctorId),
-  ])
-  doctor.value = doctorResult ?? null
-  slots.value = slotsResult
-  isLoading.value = false
+  try {
+    const [doctorResult, slotsResult] = await Promise.all([
+      doctorsService.getById(doctorId),
+      slotsService.getByDoctor(doctorId),
+    ])
+    doctor.value = doctorResult ?? null
+    slots.value = slotsResult
+  } catch {
+    doctor.value = null
+  } finally {
+    isLoading.value = false
+  }
 })
 
 function selectSlot(slotId: string) {
@@ -65,6 +72,7 @@ async function handleConfirm() {
   isSubmitting.value = true
   try {
     await requestAppointment({
+      slotId: selectedSlot.value.id,
       doctorId: doctor.value.id,
       doctorName: doctor.value.fullName,
       specialty: doctor.value.specialty,
@@ -75,6 +83,15 @@ async function handleConfirm() {
     })
     showConfirm.value = false
     router.push('/appointments')
+  } catch (error) {
+    showConfirm.value = false
+    selectedSlotId.value = null
+    toast.add({
+      severity: 'error',
+      summary: error instanceof Error ? error.message : 'No se pudo solicitar la cita.',
+      life: 4000,
+    })
+    slots.value = await slotsService.getByDoctor(doctorId)
   } finally {
     isSubmitting.value = false
   }

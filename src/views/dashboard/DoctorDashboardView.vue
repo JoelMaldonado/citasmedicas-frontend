@@ -2,6 +2,7 @@
 import { computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth.store'
 import { useAppointments } from '@/composables/useAppointments'
+import { getEffectiveStatus } from '@/utils/appointmentStatus'
 import StatCard from '@/components/common/StatCard.vue'
 
 const authStore = useAuthStore()
@@ -14,7 +15,10 @@ const todayKey = new Date().toISOString().slice(0, 10)
 const pendingCount = computed(() => appointments.value.filter((apt) => apt.status === 'pending').length)
 const todayCount = computed(() => appointments.value.filter((apt) => apt.date === todayKey).length)
 const patientsAttended = computed(
-  () => new Set(appointments.value.filter((apt) => apt.status === 'completed').map((apt) => apt.patientId)).size,
+  () =>
+    new Set(
+      appointments.value.filter((apt) => getEffectiveStatus(apt) === 'completed').map((apt) => apt.patientId),
+    ).size,
 )
 </script>
 

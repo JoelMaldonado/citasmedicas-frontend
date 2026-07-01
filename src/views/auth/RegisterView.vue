@@ -48,8 +48,8 @@ async function handleSubmit() {
 
   try {
     await register({ fullName: form.fullName, email: form.email, password: form.password })
-  } catch {
-    submitError.value = 'No se pudo completar el registro. Intenta nuevamente.'
+  } catch (error) {
+    submitError.value = error instanceof Error ? error.message : 'No se pudo completar el registro. Intenta nuevamente.'
   }
 }
 </script>

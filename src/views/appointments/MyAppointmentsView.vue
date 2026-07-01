@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { useToast } from 'primevue/usetoast'
 import type { Appointment } from '@/types/appointment.types'
 import { useAppointments } from '@/composables/useAppointments'
+import { getEffectiveStatus } from '@/utils/appointmentStatus'
 import StatusBadge from '@/components/appointments/StatusBadge.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 
 const { appointments, isLoading, ensureLoaded, cancelAppointment } = useAppointments()
+const toast = useToast()
 
 const showCancelConfirm = ref(false)
 const isCancelling = ref(false)
@@ -15,7 +18,8 @@ const appointmentToCancel = ref<Appointment | null>(null)
 onMounted(ensureLoaded)
 
 function canCancel(appointment: Appointment): boolean {
-  return appointment.status === 'pending' || appointment.status === 'confirmed'
+  const status = getEffectiveStatus(appointment)
+  return status === 'pending' || status === 'confirmed'
 }
 
 function openCancelDialog(appointment: Appointment) {
@@ -29,6 +33,12 @@ async function handleCancel() {
   try {
     await cancelAppointment(appointmentToCancel.value.id)
     showCancelConfirm.value = false
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: error instanceof Error ? error.message : 'No se pudo cancelar la cita.',
+      life: 4000,
+    })
   } finally {
     isCancelling.value = false
   }
@@ -57,7 +67,7 @@ async function handleCancel() {
         <template #body="{ data }">{{ data.startTime }} - {{ data.endTime }}</template>
       </Column>
       <Column header="Estado">
-        <template #body="{ data }"><StatusBadge :status="data.status" /></template>
+        <template #body="{ data }"><StatusBadge :status="getEffectiveStatus(data)" /></template>
       </Column>
       <Column header="Acciones">
         <template #body="{ data }">

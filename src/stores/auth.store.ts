@@ -2,8 +2,7 @@ import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { User } from '@/types/user.types'
 import { authService, type LoginPayload, type RegisterPayload } from '@/services/auth.service'
-
-const STORAGE_KEY = 'citasmedicas.auth'
+import { AUTH_STORAGE_KEY } from '@/services/authToken'
 
 interface StoredAuth {
   user: User
@@ -11,7 +10,7 @@ interface StoredAuth {
 }
 
 function readStoredAuth(): StoredAuth | null {
-  const raw = localStorage.getItem(STORAGE_KEY)
+  const raw = localStorage.getItem(AUTH_STORAGE_KEY)
   if (!raw) return null
   try {
     return JSON.parse(raw) as StoredAuth
@@ -36,7 +35,7 @@ export const useAuthStore = defineStore('auth', () => {
       const result = await authService.login(payload)
       user.value = result.user
       token.value = result.token
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(result))
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(result))
     } finally {
       isLoading.value = false
     }
@@ -48,7 +47,7 @@ export const useAuthStore = defineStore('auth', () => {
       const result = await authService.register(payload)
       user.value = result.user
       token.value = result.token
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(result))
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(result))
     } finally {
       isLoading.value = false
     }
@@ -57,7 +56,7 @@ export const useAuthStore = defineStore('auth', () => {
   function logout() {
     user.value = null
     token.value = null
-    localStorage.removeItem(STORAGE_KEY)
+    localStorage.removeItem(AUTH_STORAGE_KEY)
   }
 
   return { user, token, isLoading, isAuthenticated, role, login, register, logout }
