@@ -46,8 +46,8 @@ Vista (views/) → composable (composables/) → store (stores/) → service (se
 
 ## Requisitos
 
-- Node.js 20+
-- pnpm
+- Docker — para correr todo sin instalar nada más, **o bien**:
+- Node.js 20+ y pnpm
 - El backend (`citasmedicas-backend`) corriendo — ver su propio README para levantar la base de datos y la API.
 
 ## Configuración
@@ -62,7 +62,15 @@ Variable requerida:
 |---|---|
 | `VITE_API_URL` | URL base del backend (REST + WebSocket), ej. `http://localhost:3005` |
 
-## Instalación y ejecución
+## Ejecución con Docker (recomendado, no requiere Node ni pnpm instalados)
+
+```bash
+docker compose up --build
+```
+
+Compila la app y la sirve con nginx en `http://localhost:5173`. `VITE_API_URL` se toma de `.env` en el momento del build (Vite lo inlinea en el bundle, no es una variable de entorno en tiempo de ejecución).
+
+## Instalación y ejecución manual (sin Docker)
 
 ```bash
 pnpm install
