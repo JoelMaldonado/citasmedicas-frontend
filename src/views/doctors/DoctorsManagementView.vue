@@ -38,7 +38,6 @@ function handleEdit() {
       <Column field="fullName" header="Nombre" />
       <Column field="email" header="Correo" />
       <Column field="specialty" header="Especialidad" />
-      <Column field="licenseNumber" header="Colegiatura" />
       <Column header="Acciones">
         <template #body="{ data }">
           <div class="row-actions">
@@ -54,7 +53,6 @@ function handleEdit() {
         <p><strong>Nombre:</strong> {{ selectedDoctor.fullName }}</p>
         <p><strong>Correo:</strong> {{ selectedDoctor.email }}</p>
         <p><strong>Especialidad:</strong> {{ selectedDoctor.specialty }}</p>
-        <p><strong>Colegiatura:</strong> {{ selectedDoctor.licenseNumber }}</p>
       </div>
     </Dialog>
   </div>

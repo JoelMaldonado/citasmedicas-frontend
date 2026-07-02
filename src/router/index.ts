@@ -28,20 +28,13 @@ const routes: RouteRecordRaw[] = [
     children: [
       {
         path: '',
-        redirect: () => `/dashboard/${useAuthStore().role ?? 'patient'}`,
+        redirect: () => {
+          const role = useAuthStore().role
+          if (role === 'admin') return '/admin/doctors'
+          if (role === 'patient') return '/appointments'
+          return '/doctor/appointments'
+        },
       },
-      { path: 'patient', component: () => import('@/views/dashboard/PatientDashboardView.vue'), meta: { roles: ['patient'] } },
-      { path: 'doctor', component: () => import('@/views/dashboard/DoctorDashboardView.vue'), meta: { roles: ['doctor'] } },
-      { path: 'admin', component: () => import('@/views/dashboard/AdminDashboardView.vue'), meta: { roles: ['admin'] } },
-    ],
-  },
-  {
-    path: '/doctors',
-    component: DashboardLayout,
-    meta: { requiresAuth: true, roles: ['patient'] },
-    children: [
-      { path: '', component: () => import('@/views/doctors/DoctorsListView.vue') },
-      { path: ':doctorId/slots', component: () => import('@/views/appointments/AvailableSlotsView.vue') },
     ],
   },
   {
@@ -56,7 +49,6 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, roles: ['doctor'] },
     children: [
       { path: 'appointments', component: () => import('@/views/appointments/DoctorAppointmentsView.vue') },
-      { path: 'slots/generate', component: () => import('@/views/appointments/GenerateSlotsView.vue') },
     ],
   },
   {

@@ -7,13 +7,11 @@ export interface CreateDoctorPayload {
   email: string
   password: string
   specialty: string
-  licenseNumber: string
 }
 
 interface ApiDoctor {
   id: string
   specialty: string
-  licenseNumber: string
   user: {
     id: string
     email: string
@@ -27,7 +25,6 @@ function toDoctor(apiDoctor: ApiDoctor): Doctor {
     fullName: apiDoctor.user.fullName,
     email: apiDoctor.user.email,
     specialty: apiDoctor.specialty,
-    licenseNumber: apiDoctor.licenseNumber,
   }
 }
 

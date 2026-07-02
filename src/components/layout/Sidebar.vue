@@ -11,17 +11,12 @@ interface NavItem {
 
 const NAV_ITEMS: Record<string, NavItem[]> = {
   patient: [
-    { label: 'Dashboard', to: '/dashboard/patient', icon: 'pi pi-home' },
-    { label: 'Médicos', to: '/doctors', icon: 'pi pi-users' },
     { label: 'Mis citas', to: '/appointments', icon: 'pi pi-calendar' },
   ],
   doctor: [
-    { label: 'Dashboard', to: '/dashboard/doctor', icon: 'pi pi-home' },
     { label: 'Mis citas', to: '/doctor/appointments', icon: 'pi pi-calendar' },
-    { label: 'Generar horarios', to: '/doctor/slots/generate', icon: 'pi pi-clock' },
   ],
   admin: [
-    { label: 'Dashboard', to: '/dashboard/admin', icon: 'pi pi-home' },
     { label: 'Médicos', to: '/admin/doctors', icon: 'pi pi-users' },
   ],
 }

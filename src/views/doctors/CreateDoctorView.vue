@@ -15,7 +15,6 @@ const form = reactive({
   email: '',
   password: '',
   specialty: '',
-  licenseNumber: '',
 })
 
 const errors = reactive({
@@ -23,7 +22,6 @@ const errors = reactive({
   email: '',
   password: '',
   specialty: '',
-  licenseNumber: '',
 })
 
 const isSubmitting = ref(false)
@@ -34,7 +32,6 @@ function validate(): boolean {
   errors.email = /^\S+@\S+\.\S+$/.test(form.email) ? '' : 'Ingresa un correo válido.'
   errors.password = form.password.length >= 6 ? '' : 'La contraseña debe tener al menos 6 caracteres.'
   errors.specialty = form.specialty ? '' : 'Selecciona una especialidad.'
-  errors.licenseNumber = form.licenseNumber ? '' : 'El número de colegiatura es obligatorio.'
 
   return Object.values(errors).every((error) => !error)
 }
@@ -89,12 +86,6 @@ async function handleSubmit() {
             <label for="specialty">Especialidad</label>
             <Select id="specialty" v-model="form.specialty" :options="SPECIALTIES" placeholder="Selecciona una especialidad" :invalid="!!errors.specialty" fluid />
             <small v-if="errors.specialty" class="field__error">{{ errors.specialty }}</small>
-          </div>
-
-          <div class="field">
-            <label for="licenseNumber">Número de colegiatura</label>
-            <InputText id="licenseNumber" v-model="form.licenseNumber" placeholder="CMP-00000" :invalid="!!errors.licenseNumber" />
-            <small v-if="errors.licenseNumber" class="field__error">{{ errors.licenseNumber }}</small>
           </div>
 
           <Message v-if="submitError" severity="error" :closable="false">{{ submitError }}</Message>

@@ -15,12 +15,14 @@ export function useAuth() {
 
   async function login(payload: LoginPayload) {
     await store.login(payload)
-    await router.push(`/dashboard/${store.role}`)
+    if (store.role === 'admin') await router.push('/admin/doctors')
+    else if (store.role === 'patient') await router.push('/appointments')
+    else await router.push('/doctor/appointments')
   }
 
   async function register(payload: RegisterPayload) {
     await store.register(payload)
-    await router.push('/dashboard/patient')
+    await router.push('/appointments')
   }
 
   async function logout() {

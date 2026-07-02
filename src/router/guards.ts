@@ -15,7 +15,9 @@ export function setupGuards(router: Router) {
     const authStore = useAuthStore()
 
     if (to.meta.guestOnly && authStore.isAuthenticated) {
-      return `/dashboard/${authStore.role}`
+      if (authStore.role === 'admin') return '/admin/doctors'
+      if (authStore.role === 'patient') return '/appointments'
+      return '/doctor/appointments'
     }
 
     if (to.meta.requiresAuth && !authStore.isAuthenticated) {

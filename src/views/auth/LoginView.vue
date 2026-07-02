@@ -1,46 +1,49 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
-import { useAuth } from '@/composables/useAuth'
+import { reactive, ref } from "vue";
+import { useAuth } from "@/composables/useAuth";
 
-const { login, isLoading } = useAuth()
+const { login, isLoading } = useAuth();
 
 const form = reactive({
-  email: '',
-  password: '',
-})
+  email: "",
+  password: "",
+});
 
 const errors = reactive({
-  email: '',
-  password: '',
-})
+  email: "",
+  password: "",
+});
 
-const submitError = ref('')
+const submitError = ref("");
 
 function validate(): boolean {
-  errors.email = ''
-  errors.password = ''
+  errors.email = "";
+  errors.password = "";
 
   if (!form.email) {
-    errors.email = 'El correo es obligatorio.'
+    errors.email = "El correo es obligatorio.";
   } else if (!/^\S+@\S+\.\S+$/.test(form.email)) {
-    errors.email = 'Ingresa un correo válido.'
+    errors.email = "Ingresa un correo válido.";
   }
 
   if (!form.password) {
-    errors.password = 'La contraseña es obligatoria.'
+    errors.password = "La contraseña es obligatoria.";
   }
 
-  return !errors.email && !errors.password
+  return !errors.email && !errors.password;
 }
 
 async function handleSubmit() {
-  submitError.value = ''
-  if (!validate()) return
+  submitError.value = "";
+  if (!validate()) return;
 
   try {
-    await login({ email: form.email, password: form.password })
+    await login({ email: form.email, password: form.password });
   } catch (error) {
-    submitError.value = error instanceof Error ? error.message : 'No se pudo iniciar sesión. Intenta nuevamente.'
+    submitError.value =
+      error instanceof Error
+        ? error.message
+        : "No se pudo iniciar sesión. Intenta nuevamente.";
   }
 }
 </script>
@@ -53,13 +56,22 @@ async function handleSubmit() {
         <span>CitasMedicas</span>
       </div>
     </template>
-    <template #subtitle>Inicia sesión para gestionar tus citas médicas</template>
+    <template #subtitle
+      >Inicia sesión para gestionar tus citas médicas</template
+    >
     <template #content>
       <form class="login-form" @submit.prevent="handleSubmit">
         <div class="field">
           <label for="email">Correo electrónico</label>
-          <InputText id="email" v-model="form.email" placeholder="correo@ejemplo.com" :invalid="!!errors.email" />
-          <small v-if="errors.email" class="field__error">{{ errors.email }}</small>
+          <InputText
+            id="email"
+            v-model="form.email"
+            placeholder="correo@ejemplo.com"
+            :invalid="!!errors.email"
+          />
+          <small v-if="errors.email" class="field__error">{{
+            errors.email
+          }}</small>
         </div>
 
         <div class="field">
@@ -73,15 +85,26 @@ async function handleSubmit() {
             :invalid="!!errors.password"
             fluid
           />
-          <small v-if="errors.password" class="field__error">{{ errors.password }}</small>
+          <small v-if="errors.password" class="field__error">{{
+            errors.password
+          }}</small>
         </div>
 
-        <Message v-if="submitError" severity="error" :closable="false">{{ submitError }}</Message>
+        <Message v-if="submitError" severity="error" :closable="false">{{
+          submitError
+        }}</Message>
 
-        <Button type="submit" label="Ingresar" icon="pi pi-sign-in" :loading="isLoading" class="login-form__submit" />
+        <Button
+          type="submit"
+          label="Ingresar"
+          icon="pi pi-sign-in"
+          :loading="isLoading"
+          class="login-form__submit"
+        />
 
         <p class="login-form__register">
-          ¿No tienes cuenta? <router-link to="/register">Regístrate aquí</router-link>
+          ¿No tienes cuenta?
+          <router-link to="/register">Regístrate aquí</router-link>
         </p>
       </form>
     </template>

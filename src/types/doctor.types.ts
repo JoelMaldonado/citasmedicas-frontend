@@ -3,5 +3,4 @@ export interface Doctor {
   fullName: string
   email: string
   specialty: string
-  licenseNumber: string
 }

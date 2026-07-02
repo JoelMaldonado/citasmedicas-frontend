@@ -11,13 +11,4 @@ export const slotsService = {
       throw new Error(extractErrorMessage(error, 'No se pudieron cargar los horarios disponibles.'))
     }
   },
-
-  async generate(doctorId: string, startDate: string, days: number): Promise<{ createdCount: number }> {
-    try {
-      const { data } = await api.post<unknown[]>(`/doctors/${doctorId}/generate-slots`, { startDate, days })
-      return { createdCount: data.length }
-    } catch (error) {
-      throw new Error(extractErrorMessage(error, 'No se pudieron generar los horarios.'))
-    }
-  },
 }
